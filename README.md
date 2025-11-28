@@ -12,10 +12,11 @@ A Django-based bot that analyzes GitHub Pull Requests and generates:
 
 🔹 File-level diff insights
 
-This bot is designed to integrate with Zoho Cliq through a webhook, letting users send a GitHub PR URL and receive a structured analysis.
+This bot integrates with Zoho Cliq through a Custom Bot, allowing users to send a GitHub PR URL and receive a structured analysis.
 
 🚀 Features
-1. PR Metadata Extraction
+
+PR Metadata Extraction
 
 Title
 
@@ -29,7 +30,7 @@ Files changed
 
 Additions and deletions
 
-2. Smart Code Review
+Smart Code Review
 
 Detects common code issues
 
@@ -37,7 +38,7 @@ Highlights poor coding practices
 
 Suggests improvements
 
-3. Safety & Security Checks
+Safety & Security Checks
 
 Hardcoded secrets
 
@@ -45,13 +46,13 @@ Dangerous functions
 
 Unsafe patterns
 
-4. Summarization
+Summarization
 
 Generates human-readable summaries of PR changes
 
-Helps reviewers quickly understand the update
+Helps reviewers quickly understand updates
 
-5. File-Level Insights
+File-Level Insights
 
 Patch-based analysis
 
@@ -69,11 +70,11 @@ Ngrok (local tunnel)
 
 GitHub REST API
 
-Zoho Cliq Webhooks
+Zoho Cliq Custom Bot
 
 📌 Environment Variables
 
-Create a .env file in the project root:
+Create a .env file in the project root with:
 
 SECRET_KEY=your-django-secret-key
 DEBUG=True
@@ -94,24 +95,101 @@ ngrok http 8000
 
 Update your .env with the new ngrok URL.
 
-🤝 How to Use with Zoho Cliq
+🤝 How to Use with Zoho Cliq (Contest Setup)
 
-Go to Cliq > Bots & Tools > Webhooks
+This project works with a Zoho Cliq Custom Bot, not webhooks.
 
-Create a new webhook
+1️⃣ Create a Custom Bot
+Go to: Cliq → Bots → Build Bot → Custom Bot
 
-Use:
+2️⃣ Configure the Bot
 
-POST URL → your-ngrok-url/analyze/
+Add a bot name
 
-Type → Bot
+Add a description
 
-In any Cliq chat, send a PR URL:
+Enable Message Handler
+
+3️⃣ Add this Deluge Script in “Message Handler”
+
+response = Map();
+text = "";
+
+if(message != null)
+{
+    text = message.toString();
+}
+
+if(text != "" && text.contains("https://github.com") && text.contains("/pull/"))
+{
+    url = "https://your-ngrok-url/analyze/";  // Replace with your ngrok URL
+    payload = Map();
+    payload.put("pr_url", text);
+
+    try
+    {
+        result = invokeurl
+        [
+            url : url
+            type : POST
+            body : payload.toString()
+            headers : {"Content-Type" : "application/json"}
+        ];
+
+        if(result != null)
+        {
+            summary = result.get("summary");
+            review = result.get("automated_review");
+            safety = result.get("merge_safety");
+            overview = result.get("concise_overview");
+
+            codeInsights = result.get("code_insights");
+            codeExplanation = result.get("code_explanation");
+            warnings = result.get("warnings");
+            tests = result.get("tests_present");
+            riskScore = result.get("risk_score");
+
+            final_msg = "";
+            final_msg += "PR Summary\n-----------\n" + summary + "\n\n";
+
+            if(codeInsights != null) final_msg += "Code Insights\n-----------\n" + codeInsights + "\n\n";
+            if(codeExplanation != null) final_msg += "Code Explanation\n-----------\n" + codeExplanation + "\n\n";
+            if(warnings != null) final_msg += "Warnings\n-----------\n" + warnings + "\n\n";
+            if(tests != null) final_msg += "Tests Present\n-----------\n" + tests + "\n\n";
+            if(riskScore != null) final_msg += "Risk Score\n-----------\n" + riskScore + "\n\n";
+
+            final_msg += "Automated Review\n-----------\n" + review + "\n\n";
+            final_msg += "Merge Safety\n-----------\n" + safety + "\n\n";
+            final_msg += "Concise Overview\n-----------\n" + overview;
+
+            response.put("text", final_msg);
+        }
+        else
+        {
+            response.put("text", "Could not get summary from API.");
+        }
+    }
+    catch(e)
+    {
+        response.put("text", "Error calling summarization API.");
+    }
+}
+else
+{
+    response.put("text", "Send me a PR link to summarize!");
+}
+
+return response;
+
+
+⚠️ Important: Replace https://your-ngrok-url/analyze/ with your ngrok HTTPS forwarding URL.
+
+4️⃣ Send a PR URL in Cliq:
 
 https://github.com/user/repo/pull/123
 
 
-You will get:
+You will receive:
 
 ✔️ Summary
 
@@ -122,7 +200,7 @@ You will get:
 ✔️ File changes
 
  Project Structure
- /
+/
 ├── core/
 │   ├── github_utils.py
 │   ├── reviewer.py
