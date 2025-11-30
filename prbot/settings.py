@@ -17,9 +17,12 @@ SECRET_KEY = os.environ.get("SECRET_KEY", "fallback-secret-key")
 DEBUG = os.environ.get("DEBUG", "False") == "True"
 
 # Set your Railway app URL here
-ALLOWED_HOSTS = os.environ.get(
-    "ALLOWED_HOSTS", "127.0.0.1,localhost,pr-summarizer-bot-production.up.railway.app"
-).split(",")
+ALLOWED_HOSTS = [
+    host.strip() for host in os.environ.get(
+        "ALLOWED_HOSTS",
+        "127.0.0.1,localhost,pr-summarizer-bot-production.up.railway.app"
+    ).split(",") if host.strip()
+]
 
 # Optional: GitHub token
 GITHUB_TOKEN = os.environ.get("GITHUB_TOKEN")
